@@ -1,141 +1,136 @@
 <template>
-  <div class="login-container">
-    <form @submit.prevent="loginUser">
+  <div class="page">
+    <div class="box">
       <h2>Login</h2>
-      
-      <input
-        type="email"
-        placeholder="Email"
-        v-model="email"
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        v-model="password"
-        required
-      />
-      
-      <button type="submit">Login</button>
-      
-      <p class="message">{{ message }}</p>
-    </form>
+
+      <form @submit.prevent="loginUser">
+        <label>Email</label>
+        <input type="email" v-model="email" required />
+
+        <label>Password</label>
+        <input type="password" v-model="password" required />
+
+        <button>Login</button>
+      </form>
+
+      <p class="link">
+        New user?
+        <router-link to="/register">Register</router-link>
+      </p>
+      <button class="back-btn" @click="$router.push('/')">
+        Back to Home
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
+import api from "../services/api";
 
 export default {
-  name: "Login",
-
   data() {
     return {
-      email: "",
-      password: "",
-      message: "",
+
+      email: "",      // user email input
+      password: ""    // user password input
+
     };
   },
 
   methods: {
-    async loginUser() {
-      try {
-        const response = await axios.post("http://localhost:5000/login", {
-          email: this.email,
-          password: this.password,
-        });
-
-        this.message = response.data.message;
-      } catch (error) {
-        this.message = "Login failed. Check your email or password.";
+    loginUser() {
+      // basic check
+      if (!this.email || !this.password) {
+        alert("Please enter email and password");
+        return;
       }
-    },
-  },
+      // send login request to backend
+      api.post("/login", {
+        email: this.email,
+        password: this.password
+      })
+      .then(response => {
+        console.log("login success", response.data);
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("role", response.data.role);
+
+        if (response.data.role === "company") {
+          this.$router.push("/company_dashboard");
+        } else if (response.data.role === "student") {
+          this.$router.push("/student-dashboard");
+        } else if (response.data.role === "admin") {
+          this.$router.push("/admin");
+        }
+      })
+      .catch(error => {
+        console.log("login error", error);
+
+        // backend sent an error message
+        if (error.response && error.response.data) {
+          alert(error.response.data.msg);
+        } 
+        else {
+          // server not running / network issue
+          alert("Server not reachable. Is Flask running?");
+        }
+      });
+    }
+  }
 };
 </script>
-
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.page{
+  min-height:100vh;
+  width:100%;
+  background:#f3e2dc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%);
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+.box{
+  width:360px;
+  background:#fff;
+  padding:25px;
+  border-radius:10px;
+  font-family:Arial,Helvetica,sans-serif;
 }
-
-form {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  padding: 48px 40px;
-  border-radius: 20px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-  width: 100%;
-  max-width: 380px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+h2{
+  text-align:center;
+  margin-bottom:20px;
+  color:#5a3a3a;
 }
-
-h2 {
-  text-align: center;
-  color: #1e3a8a;
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 8px;
+label{
+  display:block;
+  margin-top:12px;
+  font-size:14px;
+  color:#5a3a3a;
 }
-
-input {
-  padding: 16px 20px;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  border-radius: 12px;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.8);
+input{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border-radius:6px;
+  border:1px solid #d6b8ae;
+  font-size:14px;
 }
-
-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: white;
+button{
+  width:100%;
+  margin-top:20px;
+  padding:10px;
+  background:#c08478;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  font-size:14px;
 }
-
-button {
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.link{
+  margin-top:15px;
+  text-align:center;
+  font-size:14px;
+  color:#7a5a5a;
 }
-
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
-}
-
-.message {
-  text-align: center;
-  font-size: 14px;
-  color: #dc2626;
-  margin-top: 4px;
-}
-
-@media (max-width: 480px) {
-  form {
-    padding: 32px 24px;
-    margin: 16px;
-  }
+.link a{
+  color:#c08478;
+  text-decoration:none;
 }
 </style>
