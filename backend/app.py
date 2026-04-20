@@ -1139,7 +1139,7 @@ def generate_placement_report():
     rejected = len([a for a in applications if a.status == "Rejected"])
 
     placement_rate = round((selected / total_applications) * 100, 2) if total_applications else 0
-######
+#######
     with open(filepath, "w", newline="") as f:
         writer = csv.writer(f)
 
